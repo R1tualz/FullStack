@@ -1,119 +1,107 @@
-﻿_Here is some accounts you can try :
-
-+ Customer :
-
-username : Yurizana777
-password : Dat15082005!
-
-username : Goten6969
-password : ImGoten999!
-
-
-+ Vendor :
-
-username : Yurizana888
-password : Dragonball777!
-
-username : Vegeta777
-password : Dragonsoul69@
-
-username : Gohanbeast
-password : Nostalgia777!
-
-
-+ Shipper :
-
-username : Trunksss
-password : ImTrunks999@
-
-username : Badrockkk
-password : Nostalgia777!
-
-username : Turlesss
-password : ImTurles777!
-
-username : Kakarotttt
-password : Hopel3ss!
-
-username : Cucumberrrr
-password : Ihavelowiq777!
-
-
-_If this is the first time you open this program, here's how to get started :
-
-+ Open the new terminal, type "npm install"
-+ Then type "cd server", then type "npm install"
-+ Then type "cd ../client" then type "npm install"
+PROJECT SETUP GUIDE
 
 
 
-_Please ensure you have stable internet connection while testing this program
+I. Test Accounts
 
-_Please don't double click or multiple click on any button, just wait for it to do something
+* You can use the following sample accounts for testing:
 
-_To start the program, you need to open the terminal then type "npm run dev"
+I.1 Customer
+
+username: Yurizana777 
+password: Dat15082005!
+
+username: Goten6969 
+password: ImGoten999!
+
+I.2 Vendor
+
+username: Yurizana888 
+password: Dragonball777!
+
+username: Vegeta777 
+password: Dragonsoul69@
+
+username: Gohanbeast 
+password: Nostalgia777!
+
+I.3 Shipper
+
+username: Trunksss 
+password: ImTrunks999@
+
+username: Badrockkk 
+password: Nostalgia777!
+
+username: Turlesss 
+password: ImTurles777!
+
+username: Kakarotttt 
+password: Hopel3ss!
+
+username: Cucumberrrr 
+password: Ihavelowiq777!
+
+
+II. Getting Started
+
+* If this is your first time running the project, follow these steps:
+
+II.1 Open a new terminal
+   
+II.2 Run:
+npm install
+cd server && npm install
+cd ../client && npm install
+
+II.3 Ensure you have a stable internet connection.
+
+II.4 Important: Avoid double-clicking or rapidly clicking buttons — just wait for the action to complete.
+
+II.5 To start the program, run:
+npm run dev
 
 
 
-_Front end :
 
+III. Frontend
 
-+ Frameworks / Libraries :
+III.1 Frameworks & Libraries
 
-react – frontend framework for building UI.
-
+react – Frontend framework for building UI.
 react-dom – React DOM bindings.
-
-react-router-dom – routing for React apps.
-
+react-router-dom – Routing for React apps.
 axios – HTTP client for API calls.
-
-tailwindcss – utility-first CSS framework.
-
+tailwindcss – Utility-first CSS framework.
 @tailwindcss/vite – Tailwind integration with Vite.
+lucide-react – Icon library for React.
 
-lucide-react – icon library for React.
+III.2 Build & Dev Tools
 
-
-+ Build & Dev Tools :
-
-vite – build tool and development server.
-
-@vitejs/plugin-react – enables React features in Vite.
-
-eslint + plugins – linting and code quality checks.
+vite – Build tool and development server.
+@vitejs/plugin-react – React support for Vite.
+eslint (+ plugins) – Linting and code quality checks.
 
 
 
+IV. Backend
 
-_Back end :
+IV.1 Frameworks & Libraries
 
+express – Web server framework for REST APIs.
+mongoose – ODM for MongoDB.
+bcrypt – Password hashing.
+cookie-parser – Middleware for parsing cookies.
+cors – Cross-Origin Resource Sharing.
+express-session – Session management middleware.
+multer – File upload handling middleware.
 
-+ Frameworks / Libraries :
+IV.2 Dev Tools
 
-express – web server framework for building REST APIs.
-
-mongoose – ODM (Object Data Modeling) library for MongoDB.
-
-bcrypt – password hashing.
-
-cookie-parser – middleware for parsing cookies.
-
-cors – middleware to enable CORS (Cross-Origin Resource Sharing).
-
-express-session – session management middleware.
-
-multer – file upload handling middleware.
-
-
-+ Dev Tools :
-
-nodemon – auto-restarts the server on file changes.
+nodemon – Auto-restarts server on file changes.
 
 
 
 
-_Root :
 
-
-concurrently – allows running multiple npm scripts (server + client) in parallel.
+V. Root : concurrently – Run server and client scripts in parallel.
