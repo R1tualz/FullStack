@@ -1,3 +1,14 @@
+/*
+# RMIT University Vietnam 
+# Course: COSC2769 - Full Stack Development 
+# Semester: 2025B 
+# Assessment: Assignment 02 
+# Author: Vu Luong Minh Triet
+# ID: s3974712
+*/
+
+
+
 import axios from "axios"
 import { useEffect, useState } from "react"
 import My_account_customer_page from "../pages/My_account/My_account_customer_page"
