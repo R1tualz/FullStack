@@ -17,7 +17,6 @@ import My_account_route from "./routes/My_account_route.jsx";
 import Add_product_route from "./routes/Add_product_route.jsx";
 import My_product_route from "./routes/My_product_route.jsx";
 import Main_page_route from "./routes/Main_page_route.jsx";
-import Product_not_found_page from "./pages/Not_found_page/Product_not_found_page.jsx";
 import Cart_page_route from "./routes/Cart_page_route.jsx";
 import My_product_cart_page_route from "./routes/My_product_cart_page_route.jsx"
 import Order_details_page_route from "./routes/Order_details_page_route.jsx";
@@ -34,8 +33,6 @@ function App() {
       <Routes>
         {/* Registration pages */}
         <Route path="/register/:id" element={<Register_route />} />
-        <Route path="/register/:id" element={<Register_route />} />
-        <Route path="/register/:id" element={<Register_route />} />
         {/* User account page */}
         <Route path="/my_account" element={<My_account_route />} />
         {/* Vendor features */}
@@ -48,8 +45,6 @@ function App() {
         <Route path="/view_products/:id" element={<My_product_route />} />
         <Route path="/order/:id" element={<Order_details_page_route />} />
         <Route path="/order/:id1/specific/:id2" element={<Order_details_page_specific_route />} />
-        {/* Product not found */}
-        <Route path="/product_not_found" element={<Product_not_found_page />} />
         {/* Login page */}
         <Route path="/login" element={<Login_route />} />
         {/* Home page */}
@@ -59,7 +54,7 @@ function App() {
         <Route path="/copyright" element={<Footer_copyright_page />} />
         <Route path="/privacy" element={<Footer_privacy_page />} />
         <Route path="/help" element={<Footer_help_page />} />
-        {/* Page not found */}
+        {/* Not found page */}
         <Route path="*" element={<Page_not_found_page />} />
       </Routes>
     </BrowserRouter>

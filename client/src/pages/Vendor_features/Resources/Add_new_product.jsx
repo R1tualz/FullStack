@@ -11,6 +11,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect";
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data";
 import axios from "axios";
 
 function Add_new_product() {
@@ -18,6 +20,10 @@ function Add_new_product() {
     // State for handling product image (preview + file)
     const [imageUrl, setImageUrl] = useState("https://api.dicebear.com/9.x/shapes/svg?seed=Product");
     const [imageFile, setImageFile] = useState(null);
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // State for form announcements + field validations
     const [announcement, setAnnouncement] = useState(["Add New Product", "text-white"]);
     const [product_name, set_product_name] = useState(["Product Name", "text-white"])
@@ -47,74 +53,91 @@ function Add_new_product() {
     }, []);
     // Handle form submit
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        // Grab field values
-        const name = document.getElementById("product_name").value.trim()
-        const price = document.getElementById("price").value.trim()
-        const description = document.getElementById("description").value.trim()
-        let status = true
-        // Check if product name already exists (API call)
-        const { data } = await axios.post("/api/vendor_features/check_product", { product_name: name })
-        // Image validation
-        if (!imageFile) {
-            set_image(["Image not found !", "text-red-400"])
-            status = false
+        try {
+            e.preventDefault();
+            // Grab field values
+            const name = document.getElementById("product_name").value.trim()
+            const price = document.getElementById("price").value.trim()
+            const description = document.getElementById("description").value.trim()
+            let status = true
+            // Check if product name already exists (API call)
+            const { data } = await axios.post("/api/vendor_features/check_product", { product_name: name })
+            if (data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            // Image validation
+            if (!imageFile) {
+                set_image(["Image not found !", "text-red-400"])
+                status = false
+            }
+            else {
+                set_image(["Product Image", "text-white"])
+            }
+            // Product name validation (10–20 chars, unique)
+            if (name.length < 10 || name.length > 20) {
+                set_product_name(["Your product name should has a length from 10 to 20", "text-red-400"])
+                status = false
+            }
+            else if (!data.status) {
+                set_product_name(["Your products can't have same name", "text-red-400"])
+                status = false
+            }
+            else {
+                set_product_name(["Product Name", "text-white"])
+            }
+            // Price validation (must be positive number)
+            if (!/^\d+(\.\d+)?$/.test(price)) {
+                set_price(["It's not a number", "text-red-400"])
+                status = false
+            }
+            else if (price <= 0) {
+                set_price(["Product price should be atleast larger than 0", "text-red-400"])
+                status = false
+            }
+            else {
+                set_price(["Price", "text-white"])
+            }
+            // Description validation (10–500 chars)
+            if (description.length > 500) {
+                set_description(["Your maximum description length is 500", "text-red-400"])
+                status = false
+            }
+            else if (description.length < 10) {
+                set_description(["Your minimum description length is 10", "text-red-400"])
+                status = false
+            }
+            else {
+                set_description(["Description", "text-white"])
+            }
+            // If any validation fails, stop here
+            if (status) {
+                // Prepare form data for API
+                const form = new FormData();
+                form.append("image", imageFile);
+                form.append("name", name);
+                form.append("price", Number(price));
+                form.append("description", description);
+                // Submit product to backend
+                const add_product = await axios.post("/api/vendor_features/add_product", form)
+                if (add_product.data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                // Show success message
+                setAnnouncement(["Product Created!", "text-green-300"]);
+                // Redirect back to homepage after short delay
+                setTimeout(() => navigate("/"), 1000)
+            }
         }
-        else {
-            set_image(["Product Image", "text-white"])
-        }
-        // Product name validation (10–20 chars, unique)
-        if (name.length < 10 || name.length > 20) {
-            set_product_name(["Your product name should has a length from 10 to 20", "text-red-400"])
-            status = false
-        }
-        else if (!data.status) {
-            set_product_name(["Your products can't have same name", "text-red-400"])
-            status = false
-        }
-        else {
-            set_product_name(["Product Name", "text-white"])
-        }
-        // Price validation (must be positive number)
-        if (!/^\d+(\.\d+)?$/.test(price)) {
-            set_price(["It's not a number", "text-red-400"])
-            status = false
-        }
-        else if (price <= 0) {
-            set_price(["Product price should be atleast larger than 0", "text-red-400"])
-            status = false
-        }
-        else {
-            set_price(["Price", "text-white"])
-        }
-        // Description validation (10–500 chars)
-        if (description.length > 500) {
-            set_description(["Your maximum description length is 500", "text-red-400"])
-            status = false
-        }
-        else if (description.length < 10) {
-            set_description(["Your minimum description length is 10", "text-red-400"])
-            status = false
-        }
-        else {
-            set_description(["Description", "text-white"])
-        }
-        // If any validation fails, stop here
-        if (status) {
-            // Prepare form data for API
-            const form = new FormData();
-            form.append("image", imageFile);
-            form.append("name", name);
-            form.append("price", Number(price));
-            form.append("description", description);
-            // Submit product to backend
-            await axios.post("/api/vendor_features/add_product", form)
-            // Show success message
-            setAnnouncement(["Product Created!", "text-green-300"]);
-            // Redirect back to homepage after short delay
-            setTimeout(() => navigate("/"), 1000)
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
         }
     };
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center">

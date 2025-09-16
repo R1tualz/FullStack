@@ -11,11 +11,16 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate } from "react-router-dom"
-
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
 
 function Active_orders() {
 
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Pagination state
     const [page, set_page] = useState(0) // current page
     const [max_page, set_max_page] = useState(0) // total pages
@@ -55,32 +60,42 @@ function Active_orders() {
     // --- Initial fetch: load orders + hub, then set up pagination (10 per page) ---
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.get("/api/shipper_features/get_order")
-            product_list.current = data.list
-            // Map backend hub codes to readable labels
-            if (data.distribution_hub === "TPHCM") {
-                set_distribution_hub("HCM City")
+            try {
+                const { data } = await axios.get("/api/shipper_features/get_order")
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                product_list.current = data.list
+                // Map backend hub codes to readable labels
+                if (data.distribution_hub === "TPHCM") {
+                    set_distribution_hub("HCM City")
+                }
+                else if (data.distribution_hub === "HANOI") {
+                    set_distribution_hub("Ha Noi Capital")
+                }
+                else if (data.distribution_hub === "HAIPHONG") {
+                    set_distribution_hub("Hai Phong")
+                }
+                else if (data.distribution_hub === "NINHBINH") {
+                    set_distribution_hub("Ninh Binh")
+                }
+                else {
+                    set_distribution_hub("Tay Ninh")
+                }
+                // Initialize pagination counts
+                if (data.list.length === 0) {
+                    set_max_page(0)
+                    set_page(0)
+                }
+                else {
+                    set_max_page(Math.ceil(data.list.length / 10))
+                    set_page(1)
+                }
             }
-            else if (data.distribution_hub === "HANOI") {
-                set_distribution_hub("Ha Noi Capital")
-            }
-            else if (data.distribution_hub === "HAIPHONG") {
-                set_distribution_hub("Hai Phong")
-            }
-            else if (data.distribution_hub === "NINHBINH") {
-                set_distribution_hub("Ninh Binh")
-            }
-            else {
-                set_distribution_hub("Tay Ninh")
-            }
-            // Initialize pagination counts
-            if (data.list.length === 0) {
-                set_max_page(0)
-                set_page(0)
-            }
-            else {
-                set_max_page(Math.ceil(data.list.length / 10))
-                set_page(1)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
             }
         }
         get_data()
@@ -95,6 +110,9 @@ function Active_orders() {
         set_products_per_page(page_content)
     }, [page])
 
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">

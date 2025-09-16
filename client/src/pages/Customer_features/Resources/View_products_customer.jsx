@@ -11,10 +11,16 @@
 import { Search, ShoppingCart } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
 import axios from "axios"
 
 function View_products_customer() {
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Pagination state
     const [page, set_page] = useState(0)
     const [max_page, set_max_page] = useState(0)
@@ -118,20 +124,30 @@ function View_products_customer() {
     // ----- Fetch products when search changes -----
     useEffect(() => {
         const get_data = async () => {
-            // fetch data from api
-            const { data } = await axios.post("api/customer_features/get_products", { keywords: search_content, min_price: minimum.current, max_price: maximum.current })
-            // if there is nothing, set page and max page to 0
-            if (data.list.length === 0) {
-                set_max_page(0)
-                set_page(0)
+            try {
+                // fetch data from api
+                const { data } = await axios.post("/api/customer_features/get_products", { keywords: search_content, min_price: minimum.current, max_price: maximum.current })
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                // if there is nothing, set page and max page to 0
+                if (data.list.length === 0) {
+                    set_max_page(0)
+                    set_page(0)
+                }
+                // set page to 1 and max page to enough to show all items in page of 6 format
+                else {
+                    set_max_page(Math.ceil(data.list.length / 6))
+                    set_page(1)
+                }
+                // set total products
+                set_products_list(data.list)
             }
-            // set page to 1 and max page to enough to show all items in page of 6 format
-            else {
-                set_max_page(Math.ceil(data.list.length / 6))
-                set_page(1)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
             }
-            // set total products
-            set_products_list(data.list)
         }
         get_data()
     }, [search_content])
@@ -144,6 +160,9 @@ function View_products_customer() {
         const page_content = products_list.slice(start_point, start_point + 6)
         set_products_per_page(page_content)
     }, [page, products_list])
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">

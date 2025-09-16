@@ -9,11 +9,20 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
+import Product_not_found from "../../Not_found_page/resources/Product_not_found"
 import axios from "axios"
 
 
 function My_product_customer_cart() {
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
+    // Set product not found in case there is missing product
+    const [found_status, set_found_status] = useState(null)
     const { id, } = useParams() // product id from route (item inside the cart)
     // Product data and top banner (text + color class)
     const [product, set_product] = useState({ name: null, price: null, description: null, image: null, seller: null })
@@ -22,25 +31,49 @@ function My_product_customer_cart() {
     // mode=false → remove one instance
     // mode=true  → remove all instances of this product
     const handle_remove_item = async (mode) => {
-        await axios.post("/api/customer_features/remove_item_from_cart", { product_id: id, remove_all: mode })
-        set_notification(["Removing...", "text-red-400"])
-        setTimeout(() => {
-            navigate("/cart") // go back to cart after action
-        }, 500)
+        try {
+            const remove_item_from_cart = await axios.post("/api/customer_features/remove_item_from_cart", { product_id: id, remove_all: mode })
+            if (remove_item_from_cart.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            set_notification(["Removing...", "text-red-400"])
+            setTimeout(() => {
+                navigate("/cart") // go back to cart after action
+            }, 500)
+        }
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
+        }
     }
     // Fetch the product’s full info for display
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.post("/api/customer_features/get_product_specific", { product_id: id })
-            if (!data.status) {
-                // If the cart entry points to a missing product
-                navigate("/product_not_found")
-                return
+            try {
+                const { data } = await axios.post("/api/customer_features/get_product_specific", { product_id: id })
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                if (!data.status) {
+                    // If the cart entry points to a missing product
+                    set_found_status(true)
+                    return
+                }
+                set_product(data)
             }
-            set_product(data)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
+            }
         }
         get_data()
     }, []) // run only once on mount
+
+    if (error) return <Failed_to_connect />
+    if (found_status) return <Product_not_found />
+    if (server_error) return <Failed_to_fetch_data />
 
 
     return (

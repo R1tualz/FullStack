@@ -11,6 +11,9 @@
 
 import { useEffect, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
+import Product_not_found from "../../Not_found_page/resources/Product_not_found"
 import axios from "axios"
 
 function Product_details() {
@@ -18,20 +21,39 @@ function Product_details() {
     const { id1, id2 } = useParams() // route params: order id (id1) + product id (id2)
     // Product data shown on the page
     const [product, set_product] = useState({ name: null, price: null, description: null, product_image: null, seller: null })
-
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
+    // Set product not found in case there is missing product
+    const [found_status, set_found_status] = useState(null)
     // Fetch product details for a specific product inside a specific order
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.post("/api/shipper_features/get_product_specific", { product_id1: id1, product_id2: id2 })
-            if (!data.status) {
-                // If backend says not found → redirect to generic not-found page
-                navigate("/product_not_found")
-                return
+            try {
+                const { data } = await axios.post("/api/shipper_features/get_product_specific", { product_id1: id1, product_id2: id2 })
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                if (!data.status) {
+                    // If backend says not found → redirect to generic not-found page
+                    set_found_status(true)
+                    return
+                }
+                set_product(data.product)
             }
-            set_product(data.product)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
+            }
         }
         get_data()
     }, []) // run only once on mount
+
+    if (error) return <Failed_to_connect />
+    if (found_status) return <Product_not_found />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased flex items-center justify-center">

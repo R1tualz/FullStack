@@ -11,10 +11,18 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
-
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
+import Product_not_found from "../../Not_found_page/resources/Product_not_found"
 
 function Order_details() {
     const { id } = useParams() // order id from route
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
+    // Set product not found in case there is missing product
+    const [found_status, set_found_status] = useState(null)
     const navigate = useNavigate()
     // Pagination state (1-based when active)
     const [page, set_page] = useState(0)
@@ -59,31 +67,50 @@ function Order_details() {
     }
     // --- Mark order status  ---
     const take_order = async () => {
-        await axios.post("/api/shipper_features/take_order", { order_id: id })
-        set_notification(["Processing...", "text-green-400"])
-        setTimeout(() => navigate("/"), 1000)
+        try {
+            const take_order = await axios.post("/api/shipper_features/take_order", { order_id: id })
+            if (take_order.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            set_notification(["Processing...", "text-green-400"])
+            setTimeout(() => navigate("/"), 1000)
+        }
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
+        }
     }
     // --- Initial fetch: get order details (items + totals), then set up pagination (10 per page) ---
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.post("/api/shipper_features/get_order_details", { order_id: id })
-            if (!data.status) {
-                // If backend indicates missing order, redirect
-                navigate("/product_not_found")
-                return
+            try {
+                const { data } = await axios.post("/api/shipper_features/get_order_details", { order_id: id })
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                if (!data.status) {
+                    set_found_status(true)
+                    return
+                }
+                product_list.current = data.order_details.list
+                set_total_price(data.order_details.total_price)
+                set_customer(data.order_details.customer_name)
+                set_total_product(product_list.current.length)
+                set_total_total_product(data.order_details.total_total_product)
+                if (product_list.current === 0) {
+                    set_max_page(0)
+                    set_page(0)
+                }
+                else {
+                    set_max_page(Math.ceil(product_list.current.length / 10))
+                    set_page(1)
+                }
             }
-            product_list.current = data.order_details.list
-            set_total_price(data.order_details.total_price)
-            set_customer(data.order_details.customer_name)
-            set_total_product(product_list.current.length)
-            set_total_total_product(data.order_details.total_total_product)
-            if (product_list.current === 0) {
-                set_max_page(0)
-                set_page(0)
-            }
-            else {
-                set_max_page(Math.ceil(product_list.current.length / 10))
-                set_page(1)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
             }
         }
         get_data()
@@ -98,6 +125,9 @@ function Order_details() {
         set_products_per_page(page_content)
     }, [page])
 
+    if (error) return <Failed_to_connect />
+    if (found_status) return <Product_not_found />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">

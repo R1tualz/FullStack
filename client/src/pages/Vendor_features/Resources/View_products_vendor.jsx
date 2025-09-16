@@ -12,9 +12,16 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect";
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data";
+
 
 function View_products_vendor() {
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Track pagination state
     const [page, set_page] = useState(0) // current page number
     const [max_page, set_max_page] = useState(0) // total number of pages
@@ -52,18 +59,28 @@ function View_products_vendor() {
     // Fetch vendor’s products on mount
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.get("api/vendor_features/get_user_product")
-            // Handle empty product list
-            if (data.list.length === 0) {
-                set_max_page(0)
-                set_page(0)
+            try {
+                const { data } = await axios.get("/api/vendor_features/get_user_product")
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                // Handle empty product list
+                if (data.list.length === 0) {
+                    set_max_page(0)
+                    set_page(0)
+                }
+                else {
+                    // Each page shows 10 products
+                    set_max_page(Math.ceil(data.list.length / 10))
+                    set_page(1)
+                }
+                product_list.current = data.list
             }
-            else {
-                // Each page shows 10 products
-                set_max_page(Math.ceil(data.list.length / 10))
-                set_page(1)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
             }
-            product_list.current = data.list
         }
         get_data()
     }, [])
@@ -76,6 +93,9 @@ function View_products_vendor() {
         const page_content = product_list.current.slice(start_point, start_point + 10)
         set_products_per_page(page_content)
     }, [page])
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">

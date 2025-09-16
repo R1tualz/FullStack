@@ -13,26 +13,49 @@ import axios from "axios"
 import { useState } from "react"
 import { useEffect } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
+import Product_not_found from "../../Not_found_page/resources/Product_not_found"
 
 function My_product_vendor() {
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
+    // Set product not found in case there is missing product
+    const [found_status, set_found_status] = useState(null)
     const { id } = useParams() // product ID from route (dynamic URL param)
     // Store product details
     const [product, set_product] = useState({ name: null, price: null, description: null, image: null })
     // Fetch product details on mount
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.post("/api/vendor_features/get_user_product_specific", { product_id: id })
-            // If product not found, navigate to error page
-            if (!data.status) {
-                navigate("/product_not_found")
-                return
+            try {
+                const { data } = await axios.post("/api/vendor_features/get_user_product_specific", { product_id: id })
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                // If product not found, navigate to error page
+                if (!data.status) {
+                    set_found_status(true)
+                    return
+                }
+                // Otherwise, set product details in state
+                set_product(data)
             }
-            // Otherwise, set product details in state
-            set_product(data)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
+            }
         }
         get_data()
     }, [])
+
+    if (error) return <Failed_to_connect />
+    if (found_status) return <Product_not_found />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased flex items-center justify-center">

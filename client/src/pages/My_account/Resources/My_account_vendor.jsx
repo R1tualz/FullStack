@@ -12,7 +12,8 @@
 import axios from "axios";
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
 
 function My_account_vendor() {
     const navigate = useNavigate()
@@ -23,6 +24,10 @@ function My_account_vendor() {
     // Vendor-specific account info
     const [avatarFile, setAvatarFile] = useState(null);
     const [avatarValidation, setAvatarValidation] = useState(["Profile Photo", "text-white"]);
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     const [username, set_username] = useState("undefined")
     const [business_name, set_business_name] = useState("undefined")
     const [business_address, set_business_address] = useState("undefined")
@@ -53,13 +58,23 @@ function My_account_vendor() {
     // Fetch vendor account info on mount
     useEffect(() => {
         const get_user = async () => {
-            const user_data = await axios.get("api/my_account/get_user")
-            const { username, account_type, business_name, business_address, avatar } = user_data.data
-            setAvatarUrl(avatar)
-            set_username(username)
-            set_business_name(business_name)
-            set_business_address(business_address)
-            set_type(account_type)
+            try {
+                const user_data = await axios.get("/api/my_account/get_user")
+                if (user_data.data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                const { username, account_type, business_name, business_address, avatar } = user_data.data
+                setAvatarUrl(avatar)
+                set_username(username)
+                set_business_name(business_name)
+                set_business_address(business_address)
+                set_type(account_type)
+            }
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
+            }
         }
         get_user()
         // Cleanup preview URL when component unmounts
@@ -72,20 +87,43 @@ function My_account_vendor() {
         if (!avatarFile) return;
         const form = new FormData();
         form.append("avatar", avatarFile);
-        await axios.put("/api/my_account/change_avatar", form)
-        set_announcement(["Saving...", "text-green-400"])
-        setTimeout(() => {
-            navigate("/")
-        }, 1000)
+        try {
+            const change_avatar = await axios.put("/api/my_account/change_avatar", form)
+            if (change_avatar.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            set_announcement(["Saving...", "text-green-400"])
+            setTimeout(() => {
+                navigate("/")
+            }, 1000)
+        }
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
+        }
     }
     // Log out vendor and redirect home
     const log_out = async () => {
-        await axios.get("api/my_account/log_out")
-        set_announcement(["Logging Out...", "text-red-400"])
-        setTimeout(() => {
-            navigate("/")
-        }, 1000)
+        try {
+            const log_out = await axios.get("/api/my_account/log_out")
+            if (log_out.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            set_announcement(["Logging Out...", "text-red-400"])
+            setTimeout(() => {
+                navigate("/")
+            }, 1000)
+        }
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
+        }
     }
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">

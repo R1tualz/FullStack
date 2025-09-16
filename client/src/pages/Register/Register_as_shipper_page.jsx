@@ -10,6 +10,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import Failed_to_connect from "../Not_found_page/resources/Failed_to_connect";
+import Failed_to_fetch_data from "../Not_found_page/resources/Failed_to_fetch_data";
 import axios from "axios";
 
 function Register_as_shipper_page() {
@@ -18,6 +20,10 @@ function Register_as_shipper_page() {
     // Avatar preview and uploaded file
     const [avatarUrl, setAvatarUrl] = useState("https://api.dicebear.com/9.x/initials/svg?seed=Shipper");
     const [avatarFile, setAvatarFile] = useState(null);
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Validation states
     const [avatar_validation, set_avatar_validation] = useState(["Profile Photo", "text-white"]);
     const [username_validation, set_username_validation] = useState(["", "text-white"]);
@@ -53,83 +59,100 @@ function Register_as_shipper_page() {
     }, []);
     // Handle form submission
     const handleSubmit = async (e) => {
-        e.preventDefault();
-        // Read form values
-        const username = document.getElementById("username").value.trim();
-        const password = document.getElementById("password").value;
-        const distribution_hub = document.getElementById("distribution_hub").value;
-        // Check if username already exists
-        const username_exist = await axios.post("api/register/get_user", { username: username })
-        let status = true; // overall form validity
-        // Avatar validation
-        if (!avatarFile) {
-            set_avatar_validation(["No avatar found !", "text-red-400"]);
-            status = false;
-        } else {
-            set_avatar_validation(["Profile Photo", "text-white"]);
+        try {
+            e.preventDefault();
+            // Read form values
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+            const distribution_hub = document.getElementById("distribution_hub").value;
+            // Check if username already exists
+            const username_exist = await axios.post("/api/register/get_user", { username: username })
+            if (username_exist.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            let status = true; // overall form validity
+            // Avatar validation
+            if (!avatarFile) {
+                set_avatar_validation(["No avatar found !", "text-red-400"]);
+                status = false;
+            } else {
+                set_avatar_validation(["Profile Photo", "text-white"]);
+            }
+            // Username validation
+            if (username.length < 8 || username.length > 15) {
+                set_username_validation(["Your username should has a length from 8 to 15 characters", "text-red-400"]);
+                status = false;
+            } else if (!/^[A-Za-z0-9]+$/.test(username)) {
+                set_username_validation(["Your username should only contain letters and digits", "text-red-400"]);
+                status = false;
+            } else if (username_exist.data.status) {
+                set_username_validation(["This username already exists", "text-red-400"]);
+                status = false;
+            } else {
+                set_username_validation(["", "text-white"]);
+            }
+            // Password validation (length + character requirements)
+            if (password.length < 8 || password.length > 20) {
+                set_password_validation(["Your password should has a length from 8 to 20 characters", "text-red-400"]);
+                status = false;
+            } else if (!/[A-Z]/.test(password)) {
+                set_password_validation(["Your password should contain atleast 1 uppercase", "text-red-400"]);
+                status = false;
+            } else if (!/[a-z]/.test(password)) {
+                set_password_validation(["Your password should contain atleast 1 lowercase", "text-red-400"]);
+                status = false;
+            } else if (!/[0-9]/.test(password)) {
+                set_password_validation(["Your password should contain atleast 1 digit", "text-red-400"]);
+                status = false;
+            } else if (!/[!@#$%^&*]/.test(password)) {
+                set_password_validation(["Your password should contain atleast one special letter in the set !@#$%^&*", "text-red-400"]);
+                status = false;
+            } else if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]+$/.test(password)) {
+                set_password_validation(["Your password should only letters, digits and special characters in the set !@#$%^&*", "text-red-400"]);
+                status = false;
+            } else {
+                set_password_validation(["", "text-white"]);
+            }
+            // Distribution hub validation
+            if (!distribution_hub) {
+                set_hub_validation(["Please select a distribution hub", "text-red-400"]);
+                status = false;
+            } else {
+                set_hub_validation(["", "text-white"]);
+            }
+            // Stop if validation fails
+            if (!status) {
+                return;
+            }
+            // Registration success
+            set_announcement(["Registration Successful !", "text-green-300"]);
+            // Build form with avatar + inputs
+            const form = new FormData();
+            form.append("avatar", avatarFile);
+            form.append("username", username);
+            form.append("password", password);
+            form.append("distribution_hub", distribution_hub);
+            form.append("type", "Shipper");
+            // Send registration request
+            const create_user = await axios.post("/api/register/create_user", form)
+            if (create_user.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            // Redirect to login after short delay
+            setTimeout(() => {
+                navigate("/login")
+            }, 1000);
         }
-        // Username validation
-        if (username.length < 8 || username.length > 15) {
-            set_username_validation(["Your username should has a length from 8 to 15 characters", "text-red-400"]);
-            status = false;
-        } else if (!/^[A-Za-z0-9]+$/.test(username)) {
-            set_username_validation(["Your username should only contain letters and digits", "text-red-400"]);
-            status = false;
-        } else if (username_exist.data.status) {
-            set_username_validation(["This username already exists", "text-red-400"]);
-            status = false;
-        } else {
-            set_username_validation(["", "text-white"]);
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
         }
-        // Password validation (length + character requirements)
-        if (password.length < 8 || password.length > 20) {
-            set_password_validation(["Your password should has a length from 8 to 20 characters", "text-red-400"]);
-            status = false;
-        } else if (!/[A-Z]/.test(password)) {
-            set_password_validation(["Your password should contain atleast 1 uppercase", "text-red-400"]);
-            status = false;
-        } else if (!/[a-z]/.test(password)) {
-            set_password_validation(["Your password should contain atleast 1 lowercase", "text-red-400"]);
-            status = false;
-        } else if (!/[0-9]/.test(password)) {
-            set_password_validation(["Your password should contain atleast 1 digit", "text-red-400"]);
-            status = false;
-        } else if (!/[!@#$%^&*]/.test(password)) {
-            set_password_validation(["Your password should contain atleast one special letter in the set !@#$%^&*", "text-red-400"]);
-            status = false;
-        } else if (!/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z0-9!@#$%^&*]+$/.test(password)) {
-            set_password_validation(["Your password should only letters, digits and special characters in the set !@#$%^&*", "text-red-400"]);
-            status = false;
-        } else {
-            set_password_validation(["", "text-white"]);
-        }
-        // Distribution hub validation
-        if (!distribution_hub) {
-            set_hub_validation(["Please select a distribution hub", "text-red-400"]);
-            status = false;
-        } else {
-            set_hub_validation(["", "text-white"]);
-        }
-        // Stop if validation fails
-        if (!status) {
-            return;
-        }
-        // Registration success
-        set_announcement(["Registration Successful !", "text-green-300"]);
-        // Build form with avatar + inputs
-        const form = new FormData();
-        form.append("avatar", avatarFile);
-        form.append("username", username);
-        form.append("password", password);
-        form.append("distribution_hub", distribution_hub);
-        form.append("type", "Shipper");
-        // Send registration request
-        await axios.post("/api/register/create_user", form);
-        // Redirect to login page
-        setTimeout(() => {
-            navigate("/login");
-        }, 1000);
     };
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center">

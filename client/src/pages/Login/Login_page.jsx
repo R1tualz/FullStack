@@ -11,6 +11,8 @@
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Failed_to_connect from "../Not_found_page/resources/Failed_to_connect";
+import Failed_to_fetch_data from "../Not_found_page/resources/Failed_to_fetch_data";
 import axios from "axios";
 
 function Login_page() {
@@ -20,26 +22,42 @@ function Login_page() {
     const [announcement, set_announcement] = useState(["Login", "text-white"])
     // announcement[0] → heading text
     // announcement[1] → heading color class
-
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Handle login attempt
     const validation = async (e) => {
         e.preventDefault()
         // Grab form input values
         const username = document.getElementById("username").value
         const password = document.getElementById("password").value
-        const get_user = await axios.post("/api/login", { username: username, password: password })
-        if (get_user.data.status) {
-            set_announcement(["Login successful !", "text-green-300"]) // show success
-            set_notification("") // clear error if have
-            setTimeout(() => navigate("/"), 1000) // redirect to home page
+        try {
+            const get_user = await axios.post("/api/login", { username: username, password: password })
+            if (get_user.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            if (get_user.data.status) {
+                set_announcement(["Login successful !", "text-green-300"]) // show success
+                set_notification("") // clear error if have
+                setTimeout(() => navigate("/"), 1000) // redirect to home page
+            }
+            else {
+                set_announcement(["Login", "text-white"])
+                set_notification("Username or password incorrect !")
+                // announcement[0] → text (e.g. "Login successful !")
+                // announcement[1] → CSS class to change heading color
+            }
         }
-        else {
-            set_announcement(["Login", "text-white"])
-            set_notification("Username or password incorrect !")
-            // announcement[0] → text (e.g. "Login successful !")
-            // announcement[1] → CSS class to change heading color
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
         }
     }
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white flex items-center justify-center">

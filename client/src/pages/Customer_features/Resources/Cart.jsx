@@ -10,9 +10,15 @@
 import axios from "axios"
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect";
+import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data";
 
 function Cart() {
     const navigate = useNavigate()
+    // Set error in case data fail to fetch
+    const [error, set_error] = useState(null)
+    // Set server error in case data fail to fetch
+    const [server_error, set_server_error] = useState(null)
     // Pagination state
     const [page, set_page] = useState(0)
     const [max_page, set_max_page] = useState(0)
@@ -57,40 +63,60 @@ function Cart() {
     }
     // ---- Place order handler ----
     const handle_order = async () => {
-        const distribution_hub = document.getElementById("choose_hub").value
-        // Require a hub selection
-        if (distribution_hub === "") {
-            set_notification(["Please Choose Your Hub", "text-red-400"])
-            return
+        try {
+            const distribution_hub = document.getElementById("choose_hub").value
+            // Require a hub selection
+            if (distribution_hub === "") {
+                set_notification(["Please Choose Your Hub", "text-red-400"])
+                return
+            }
+            // Cart must not be empty
+            else if (product_list.current.length === 0) {
+                set_notification(["Your Cart Is Empty", "text-red-400"])
+                return
+            }
+            // Send order to backend then navigate home
+            set_notification(["Sending Order...", "text-green-400"])
+            const send_data = await axios.post("/api/customer_features/send_data", { distribution_hub: distribution_hub })
+            if (send_data.data.status === "failed") {
+                set_server_error(true)
+                return
+            }
+            setTimeout(() => navigate("/"), 1000)
         }
-        // Cart must not be empty
-        else if (product_list.current.length === 0) {
-            set_notification(["Your Cart Is Empty", "text-red-400"])
-            return
+        catch (err) {
+            console.error("Connection failed:", err)
+            set_error(true)
         }
-        // Send order to backend then navigate home
-        set_notification(["Sending Order...", "text-green-400"])
-        await axios.post("/api/customer_features/send_data", { distribution_hub: distribution_hub })
-        setTimeout(() => navigate("/"), 1000)
     }
     // ---- Initial fetch: load cart items & totals ----
     useEffect(() => {
         const get_data = async () => {
-            const { data } = await axios.get("/api/customer_features/get_product_from_storage")
-            // Save raw list for pagination slicing
-            product_list.current = data.list
-            // Update totals
-            set_total_item(data.total_item)
-            set_total_price(data.total_price)
-            set_total_total_item(data.total_total_item)
-            // Setup pagination (10 items per page)
-            if (data.list.length === 0) {
-                set_max_page(0)
-                set_page(0)
+            try {
+                const { data } = await axios.get("/api/customer_features/get_product_from_storage")
+                if (data.status === "failed") {
+                    set_server_error(true)
+                    return
+                }
+                // Save raw list for pagination slicing
+                product_list.current = data.list
+                // Update totals
+                set_total_item(data.total_item)
+                set_total_price(data.total_price)
+                set_total_total_item(data.total_total_item)
+                // Setup pagination (10 items per page)
+                if (data.list.length === 0) {
+                    set_max_page(0)
+                    set_page(0)
+                }
+                else {
+                    set_max_page(Math.ceil(data.list.length / 10))
+                    set_page(1)
+                }
             }
-            else {
-                set_max_page(Math.ceil(data.list.length / 10))
-                set_page(1)
+            catch (err) {
+                console.error("Connection failed:", err)
+                set_error(true)
             }
         }
         get_data()
@@ -104,6 +130,9 @@ function Cart() {
         const page_content = product_list.current.slice(start_point, start_point + 10)
         set_products_per_page(page_content)
     }, [page])
+
+    if (error) return <Failed_to_connect />
+    if (server_error) return <Failed_to_fetch_data />
 
     return (
         <div className="min-h-screen bg-black text-white antialiased">
