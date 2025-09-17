@@ -4,7 +4,7 @@ PROJECT SETUP GUIDE
 
 I. Test Accounts
 
-* You can use the following sample accounts for testing:
+* You can use the following sample accounts for testing ( or create test account yourself in register page ) :
 
 I.1 Customer
 
@@ -136,5 +136,6 @@ On Tuan Huy - s4028018
 Vu Luong Minh Triet - s3974712
 
 Nguyen Thanh Dat - s4060872
+
 
 
