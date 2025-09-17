@@ -131,14 +131,6 @@ V. Root : concurrently – Run server and client scripts in parallel.
 
 
 
-VI. This project was made by :
-
-On Tuan Huy - s4028018
-
-Vu Luong Minh Triet - s3974712
-
-Nguyen Thanh Dat - s4060872
-
 
 
 
