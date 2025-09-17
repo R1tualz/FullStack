@@ -67,7 +67,7 @@ npm run dev
 
 II.6 Super important :
 
-since image files are stored in local folder ( Our MongoDB Atlas only store filename ), if you are testing this program on a second test computer and have errors, it might stem from your first test computer has created a new image ( either product image, or avatar ) and since, it's local, your second test computer can not keep track of the new image files --> MongoDB can not find the new file --> error, so ... try to copy "assets" folder from "client" folder from first test computer  then overwrite them on the second test computer, it should works now
+since image files are stored in local folder ( Our MongoDB Atlas only store filename ), if you are testing this program on a second test computer ( or a second repo clone ) and have errors, it might stem from your first test computer has created a new image ( either product image, or avatar ) and since, it's local, your second test computer ( or a second repo clone ) can not keep track of the new image files --> MongoDB can not find the new file --> error, so ... try to copy "assets" folder from "client" folder from first test computer  then overwrite them on the second test computer ( or a second repo clone ), it should works now
 
 
 
@@ -126,5 +126,6 @@ nodemon – Auto-restarts server on file changes.
 
 
 V. Root : concurrently – Run server and client scripts in parallel.
+
 
 
