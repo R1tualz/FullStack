@@ -13,7 +13,7 @@ import { useEffect, useRef, useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
 import Failed_to_connect from "../../Not_found_page/resources/Failed_to_connect"
 import Failed_to_fetch_data from "../../Not_found_page/resources/Failed_to_fetch_data"
-import Product_not_found from "../../Not_found_page/resources/Product_not_found"
+import Order_not_found from "../../Not_found_page/resources/Order_not_found"
 
 function Order_details() {
     const { id } = useParams() // order id from route
@@ -126,7 +126,7 @@ function Order_details() {
     }, [page])
 
     if (error) return <Failed_to_connect />
-    if (found_status) return <Product_not_found />
+    if (found_status) return <Order_not_found />
     if (server_error) return <Failed_to_fetch_data />
 
     return (
