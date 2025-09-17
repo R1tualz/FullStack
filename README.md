@@ -57,6 +57,8 @@ cd server && npm install
 
 cd ../client && npm install
 
+In general, type "npm install" in every folder that cotains a file called "package.json"
+
 II.3 Ensure you have a stable internet connection.
 
 II.4 Important: Avoid double-clicking or rapidly clicking buttons — just wait for the action to complete.
@@ -136,6 +138,7 @@ On Tuan Huy - s4028018
 Vu Luong Minh Triet - s3974712
 
 Nguyen Thanh Dat - s4060872
+
 
 
 
