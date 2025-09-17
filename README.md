@@ -61,7 +61,7 @@ II.3 Ensure you have a stable internet connection.
 
 II.4 Important: Avoid double-clicking or rapidly clicking buttons — just wait for the action to complete.
 
-II.5 To start the program, run:
+II.5 To start the program, run ( in root folder, aka FullStack if our memories serve us right ) :
 
 npm run dev
 
@@ -136,6 +136,7 @@ On Tuan Huy - s4028018
 Vu Luong Minh Triet - s3974712
 
 Nguyen Thanh Dat - s4060872
+
 
 
 
